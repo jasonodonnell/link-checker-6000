@@ -122,6 +122,7 @@ func (f *Fetcher) getHTML(url string) (*html.Node, error) {
 		Timeout: f.timeout,
 	}
 
+	// jank throttle lol
 	time.Sleep(time.Millisecond * 500)
 	resp, err := client.Get(url)
 	if err != nil {
