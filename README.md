@@ -9,7 +9,7 @@ not leave a specific website using the `allowedDomains` configuration option.
 ## Usage
 
 ```bash
-$ link-checker-6000 -config=/path/to/config.yaml
+$ link-checker-6000 -config=/path/to/config.yaml <Starting URL> <Base URL>
 ```
 
 ## Config
@@ -21,7 +21,5 @@ The following configurations are available in `config.yaml`:
 | workerPool     | Integer | Number of threads that will concurrently fetch HTML.                        |
 | maxDepth       | Integer | The maximum number of levels this will crawl.                               |
 | timeout        | Integer | The timeout before the client errors.                                       |
-| initialURL     | String  | The target URL to start crawling. Required.                                 |
-| baseURL        | String  | The base URL used when a relative link is found.                            |
 | allowedDomains | Array   | This configuration prevents the crawler from leaving the configured domains.|
 | deniedDomains  | Array   | Prevents the crawler from fetching HTML from the configured domains.        |

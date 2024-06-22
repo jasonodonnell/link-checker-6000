@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-var statusNotFound = errors.New("404 not found")
+var errStatusNotFound = errors.New("404 not found")
 
 type Config struct {
 	PoolSize       int
@@ -124,7 +124,7 @@ func (wc *WebCrawler) crawl(jobs <-chan string, out chan *html.Node, errs chan e
 		html, err := wc.getHTML(path)
 		if err != nil {
 			netErr, ok := err.(net.Error)
-			if ok && netErr.Timeout() || err == statusNotFound {
+			if ok && netErr.Timeout() || err == errStatusNotFound {
 				wc.deadLinks = append(wc.deadLinks, path)
 			} else {
 				errs <- err

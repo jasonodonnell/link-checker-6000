@@ -1,8 +1,18 @@
 ---
-workerPool: 10
-maxDepth: 2
-timeout: 5
-initialURL: "https://developer.hashicorp.com/vault"
+# URL used when rewriting local links
 baseURL: "https://developer.hashicorp.com"
+
+# Controls what domains the crawler should retrieve
 allowedDomains: [https://developer.hashicorp.com/vault]
+
+# Controls what domains the crawler should not retrieve
 deniedDomains: [https://releases.hashicorp.com/vault]
+
+# Number of goroutines concurrently retrieving HTML
+workerPool: 10
+
+# Controls the maximum depth in the BFS tree to crawl
+maxDepth: 2
+
+# HTML client timeout time
+timeout: 5
