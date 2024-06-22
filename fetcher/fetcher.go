@@ -1,13 +1,11 @@
 package fetcher
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -29,12 +27,12 @@ type Fetcher struct {
 	deniedDomains  []string
 }
 
-func NewFetcher(urls []string, poolSize, maxDepth int, allowedDomains []string, deniedDomains []string) *Fetcher {
+func NewFetcher(poolSize, maxDepth, timeout int, allowedDomains []string, deniedDomains []string) *Fetcher {
 	return &Fetcher{
 		cache:          sync.Map{},
 		poolSize:       poolSize,
 		deadLinks:      []string{},
-		timeout:        time.Second * 5,
+		timeout:        time.Second * time.Duration(timeout),
 		wg:             &sync.WaitGroup{},
 		logger:         slog.Default(),
 		throttle:       time.Millisecond * 250,
@@ -44,7 +42,7 @@ func NewFetcher(urls []string, poolSize, maxDepth int, allowedDomains []string, 
 	}
 }
 
-func (f *Fetcher) GetHTML(ctx context.Context, urls []string) []*html.Node {
+func (f *Fetcher) GetHTML(urls []string) []*html.Node {
 	jobs := make(chan string)
 	outCh := make(chan *html.Node)
 	errCh := make(chan error)
@@ -65,9 +63,7 @@ func (f *Fetcher) GetHTML(ctx context.Context, urls []string) []*html.Node {
 	go func() {
 		for _, url := range urls {
 			f.logger.Info("Loading job", "url", url)
-			if !slices.Contains(f.deniedDomains, url) {
-				jobs <- url
-			}
+			jobs <- url
 		}
 		close(jobs)
 	}()
@@ -103,6 +99,7 @@ func (f *Fetcher) GetHTML(ctx context.Context, urls []string) []*html.Node {
 
 func (f *Fetcher) crawl(jobs <-chan string, out chan *html.Node, errs chan error) {
 	defer f.wg.Done()
+Exit:
 	for path := range jobs {
 		path, err := url.PathUnescape(path)
 		if err != nil {
@@ -113,6 +110,13 @@ func (f *Fetcher) crawl(jobs <-chan string, out chan *html.Node, errs chan error
 		if _, exists := f.cache.Load(path); exists {
 			f.logger.Info("Cache hit", "url", path)
 			continue
+		}
+
+		for _, denied := range f.deniedDomains {
+			if strings.Contains(path, denied) {
+				f.logger.Info("Denying url", "url", path)
+				goto Exit
+			}
 		}
 
 		f.cache.Store(path, struct{}{})

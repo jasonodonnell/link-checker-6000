@@ -20,8 +20,8 @@ type Config struct {
 
 var k = koanf.New(".")
 
-func LoadConfig() (*Config, error) {
-	k.Load(file.Provider("config.yaml"), yaml.Parser())
+func loadConfig(path string) (*Config, error) {
+	k.Load(file.Provider(path), yaml.Parser())
 	out := &Config{}
 	k.Unmarshal("", out)
 
@@ -29,7 +29,7 @@ func LoadConfig() (*Config, error) {
 		return nil, errors.New("initialURL must be set in the config")
 	}
 
-	if out.InitialURL == "" {
+	if out.BaseURL == "" {
 		return nil, errors.New("baseURL must be set in the config")
 	}
 
