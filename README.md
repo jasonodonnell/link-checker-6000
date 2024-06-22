@@ -2,9 +2,9 @@
 
 > **_NOTE:_**  This was just a fun program to write. Use at your own discretion.
 
-This crawls live websites and will fetch the HTML for every link it finds, reporting 
-links that are invalid. The crawler can be configured to not leave a specific 
-website using the `allowedDomains` configuration option.
+This crawls live websites and reporting links that are broken. The crawler can 
+be configured to not leave a specific website using the `allowedDomains` 
+configuration option.
 
 ## Usage
 
