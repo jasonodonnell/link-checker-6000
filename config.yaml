@@ -1,6 +1,6 @@
 ---
 workerPool: 10
-maxDepth: 5
+maxDepth: 2
 timeout: 5
 initialURL: "https://developer.hashicorp.com/vault"
 baseURL: "https://developer.hashicorp.com"

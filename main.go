@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 
-	"link-checker-6000/fetcher"
+	"link-checker-6000/webcrawler"
 )
 
 func main() {
@@ -26,10 +26,19 @@ func main() {
 		os.Exit(2)
 	}
 
-	fetcher := fetcher.NewFetcher(config.WorkerPool, config.MaxDepth, config.Timeout, config.AllowedDomains, config.DeniedDomains, logger)
+	crawlerConfig := webcrawler.Config{
+		PoolSize:       config.WorkerPool,
+		MaxDepth:       config.MaxDepth,
+		Timeout:        config.Timeout,
+		AllowedDomains: config.AllowedDomains,
+		DeniedDomains:  config.DeniedDomains,
+		Logger:         logger,
+	}
+
+	crawler := webcrawler.NewWebCrawler(crawlerConfig)
 	urls := []string{config.InitialURL}
 	for len(urls) != 0 {
-		docs := fetcher.GetHTML(urls)
+		docs := crawler.GetHTML(urls)
 
 		urls = []string{}
 		for _, doc := range docs {
@@ -38,7 +47,7 @@ func main() {
 	}
 
 	fmt.Println("Dead links:")
-	for _, dead := range fetcher.DeadLinks() {
+	for _, dead := range crawler.DeadLinks() {
 		fmt.Println(dead)
 	}
 }
