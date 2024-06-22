@@ -11,7 +11,7 @@ deniedDomains: [https://releases.hashicorp.com/vault]
 # Number of goroutines concurrently retrieving HTML
 workerPool: 10
 
-# Controls the maximum depth in the BFS tree to crawl
+# Controls the maximum depth the BFS will crawl
 maxDepth: 2
 
 # HTML client timeout time
