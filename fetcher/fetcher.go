@@ -1,10 +1,14 @@
 package fetcher
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,57 +16,64 @@ import (
 )
 
 type Fetcher struct {
-	html         chan []byte
-	cache        sync.Map
-	poolSize     int
-	deadLinks    []string
-	timeout      time.Duration
-	wg           *sync.WaitGroup
-	logger       *slog.Logger
-	currentDepth int
-	maxDepth     int
+	cache          sync.Map
+	poolSize       int
+	deadLinks      []string
+	timeout        time.Duration
+	wg             *sync.WaitGroup
+	logger         *slog.Logger
+	throttle       time.Duration
+	currentDepth   int
+	maxDepth       int
+	allowedDomains []string
+	deniedDomains  []string
 }
 
-func NewFetcher(urls []string, poolSize, maxDepth int, timeout time.Duration) *Fetcher {
+func NewFetcher(urls []string, poolSize, maxDepth int, allowedDomains []string, deniedDomains []string) *Fetcher {
 	return &Fetcher{
-		cache:     sync.Map{},
-		poolSize:  poolSize,
-		deadLinks: []string{},
-		timeout:   timeout,
-		wg:        &sync.WaitGroup{},
-		logger:    slog.Default(),
-		maxDepth:  maxDepth,
+		cache:          sync.Map{},
+		poolSize:       poolSize,
+		deadLinks:      []string{},
+		timeout:        time.Second * 5,
+		wg:             &sync.WaitGroup{},
+		logger:         slog.Default(),
+		throttle:       time.Millisecond * 250,
+		maxDepth:       maxDepth,
+		allowedDomains: allowedDomains,
+		deniedDomains:  deniedDomains,
 	}
 }
 
-func (f *Fetcher) GetHTML(urls []string) []html.Node {
+func (f *Fetcher) GetHTML(ctx context.Context, urls []string) []*html.Node {
 	jobs := make(chan string)
-	outCh := make(chan html.Node)
+	outCh := make(chan *html.Node)
 	errCh := make(chan error)
-	results := []html.Node{}
+	results := []*html.Node{}
 
 	if len(urls) == 0 || f.currentDepth >= f.maxDepth {
+		f.logger.Info("Max depth exceeded")
 		return nil
 	}
+
 	f.currentDepth += 1
 
 	for i := 0; i < f.poolSize; i++ {
 		f.wg.Add(1)
-		f.logger.Info("Adding crawler", "id", i)
 		go f.crawl(jobs, outCh, errCh)
 	}
 
 	go func() {
 		for _, url := range urls {
 			f.logger.Info("Loading job", "url", url)
-			jobs <- url
+			if !slices.Contains(f.deniedDomains, url) {
+				jobs <- url
+			}
 		}
 		close(jobs)
 	}()
 
 	go func() {
 		f.wg.Wait()
-		f.logger.Info("Wait group done!")
 		close(outCh)
 		close(errCh)
 	}()
@@ -87,12 +98,10 @@ func (f *Fetcher) GetHTML(urls []string) []html.Node {
 			break
 		}
 	}
-
-	f.logger.Info("Returning")
 	return results
 }
 
-func (f *Fetcher) crawl(jobs <-chan string, out chan html.Node, errs chan error) {
+func (f *Fetcher) crawl(jobs <-chan string, out chan *html.Node, errs chan error) {
 	defer f.wg.Done()
 	for path := range jobs {
 		path, err := url.PathUnescape(path)
@@ -113,7 +122,11 @@ func (f *Fetcher) crawl(jobs <-chan string, out chan html.Node, errs chan error)
 			continue
 		}
 
-		out <- *html
+		for _, allowed := range f.allowedDomains {
+			if strings.Contains(path, allowed) {
+				out <- html
+			}
+		}
 	}
 }
 
@@ -122,8 +135,7 @@ func (f *Fetcher) getHTML(url string) (*html.Node, error) {
 		Timeout: f.timeout,
 	}
 
-	// jank throttle lol
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(f.throttle)
 	resp, err := client.Get(url)
 	if err != nil {
 		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
@@ -131,6 +143,10 @@ func (f *Fetcher) getHTML(url string) (*html.Node, error) {
 		} else {
 			return nil, err
 		}
+	}
+
+	if resp == nil {
+		return nil, fmt.Errorf("nil response from %s", url)
 	}
 	defer resp.Body.Close()
 

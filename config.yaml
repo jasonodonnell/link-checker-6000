@@ -1,0 +1,7 @@
+---
+workerPool: 10
+maxDepth: 5
+timeout: 5
+initialURL: "https://developer.hashicorp.com/vault"
+allowedDomains: [developer.hashicorp.com/vault]
+deniedDomains: [releases.hashicorp.com/vault]
