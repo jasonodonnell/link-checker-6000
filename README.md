@@ -2,7 +2,7 @@
 
 > **_NOTE:_**  This was just a fun program to write. Use at your own discretion.
 
-This crawls live websites and reporting links that are broken. The crawler can 
+This crawls live websites and reports links that are broken. The crawler can 
 be configured to not leave a specific website using the `allowedDomains` 
 configuration option.
 
