@@ -44,6 +44,7 @@ func NewWebCrawler(cfg Config) *WebCrawler {
 	}
 }
 
+// TODO: add contexts
 func (wc *WebCrawler) GetHTML(urls []string) []*html.Node {
 	jobs := make(chan string)
 	outCh := make(chan *html.Node)
