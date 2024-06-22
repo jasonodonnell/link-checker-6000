@@ -1,6 +1,10 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"os"
+
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
@@ -34,4 +38,46 @@ func loadConfig(path string) (*Config, error) {
 	}
 
 	return out, nil
+}
+
+type opts struct {
+	configPath string
+	initialURL string
+	baseURL    string
+}
+
+func parseFlags() opts {
+	path := flag.String("config", "", "path to a config.yaml file")
+	base := flag.String("baseURL", "", "the URL to use when rewriting relative links")
+	flag.Usage = usage
+
+	flag.Parse()
+	if *path == "" {
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	if *base == "" {
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	args := flag.Args()
+	if len(args) != 1 {
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	return opts{
+		configPath: *path,
+		baseURL:    *base,
+		initialURL: args[0],
+	}
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, "Usage of link-checker-6000:\n")
+	fmt.Fprintf(os.Stderr, "\tlink-checker-6000 [flags] [starting url]\n")
+	fmt.Fprintf(os.Stderr, "Flags:\n")
+	flag.PrintDefaults()
 }

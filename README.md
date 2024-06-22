@@ -9,7 +9,13 @@ not leave a specific website using the `allowedDomains` configuration option.
 ## Usage
 
 ```bash
-$ link-checker-6000 -config=/path/to/config.yaml <Starting URL> <Base URL>
+Usage of link-checker-6000:
+        link-checker-6000 [flags] [starting url]
+Flags:
+  -baseURL string
+        the URL to use when rewriting relative links
+  -config string
+        path to a config.yaml file
 ```
 
 ## Config
