@@ -26,8 +26,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	fetcher := fetcher.NewFetcher(config.WorkerPool, config.MaxDepth, config.Timeout, config.AllowedDomains, config.DeniedDomains)
-
+	fetcher := fetcher.NewFetcher(config.WorkerPool, config.MaxDepth, config.Timeout, config.AllowedDomains, config.DeniedDomains, logger)
 	urls := []string{config.InitialURL}
 	for len(urls) != 0 {
 		docs := fetcher.GetHTML(urls)

@@ -27,14 +27,14 @@ type Fetcher struct {
 	deniedDomains  []string
 }
 
-func NewFetcher(poolSize, maxDepth, timeout int, allowedDomains []string, deniedDomains []string) *Fetcher {
+func NewFetcher(poolSize, maxDepth, timeout int, allowedDomains []string, deniedDomains []string, logger *slog.Logger) *Fetcher {
 	return &Fetcher{
 		cache:          sync.Map{},
 		poolSize:       poolSize,
 		deadLinks:      []string{},
 		timeout:        time.Second * time.Duration(timeout),
 		wg:             &sync.WaitGroup{},
-		logger:         slog.Default(),
+		logger:         logger,
 		throttle:       time.Millisecond * 250,
 		maxDepth:       maxDepth,
 		allowedDomains: allowedDomains,
