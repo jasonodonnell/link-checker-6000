@@ -135,6 +135,33 @@ func TestGetHTMLMaxDepth(t *testing.T) {
 	}
 }
 
+func TestBasicStatus404(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	cfg := Config{
+		PoolSize:       1,
+		Timeout:        5,
+		MaxDepth:       -1,
+		AllowedDomains: []string{"localhost", "127.0.0.1"},
+		Logger:         slog.Default(),
+	}
+
+	crawler := NewWebCrawler(cfg)
+
+	urls := []string{server.URL}
+	results := crawler.GetHTML(urls)
+
+	if len(results) != 0 {
+		t.Fatalf("expected 0 result, got %d", len(results))
+	}
+}
+
 // nodeToString converts an html.Node to its string representation.
 func nodeToString(n *html.Node) (string, error) {
 	var sb strings.Builder
