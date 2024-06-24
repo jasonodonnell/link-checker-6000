@@ -160,6 +160,11 @@ func TestBasicStatus404(t *testing.T) {
 	if len(results) != 0 {
 		t.Fatalf("expected 0 result, got %d", len(results))
 	}
+
+	deadlinks := crawler.DeadLinks()
+	if len(deadlinks) != 1 {
+		t.Fatalf("expected 1 deadlink, got %d", len(deadlinks))
+	}
 }
 
 // nodeToString converts an html.Node to its string representation.

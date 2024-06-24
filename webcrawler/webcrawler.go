@@ -2,7 +2,6 @@ package webcrawler
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -153,7 +152,7 @@ func (wc *WebCrawler) getHTML(url string) (*html.Node, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 404 {
-		return nil, fmt.Errorf("404 not found")
+		return nil, errStatusNotFound
 	}
 
 	return html.Parse(resp.Body)
